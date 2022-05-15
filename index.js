@@ -56,6 +56,51 @@ server.post('/db', async (req, res, next) => {
 // END OF ENDPOINTS TO TEST RETRIEVING FROM DATABASE
 /////////////////////////////////////////////////////
 
+//////////////////////////////////////
+// TO GET ALL USERS FROM THE DATABASE
+//////////////////////////////////////
+server.get('/users', async (req, res) => {
+    try {
+      const client = await pool.connect();
+      const result = await client.query('SELECT * FROM user_table');
+      const results = { 'results': (result) ? result.rows : null};
+      res.send(results.results);
+    } catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  });
+  
+  // to post new user to the database table
+  server.post('/users', async (req, res, next) => {
+    try {
+      let username = req.body.username;
+      let age = req.body.age;
+      const newInsert = await pool.query("INSERT INTO user_table (username, age) VALUES ($1, $2) RETURNING *", [username, age]);
+      res.json(newInsert);
+    }
+    catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  });
+  
+  // to get user based on username
+  server.get('/users/:username', async (req, res) => {
+    try {
+      let username = req.params.username;
+      const userResult = await pool.query("SELECT * FROM user_table WHERE username = $1", [username]);
+      const userResults = { 'results': (userResult) ? userResult.rows : null};
+      res.send(userResults.results[0]);
+    } catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  });
+  ////////////////////////////////////////
+  // END OF ENDPOINTS FOR THE USERS TABLE
+  ////////////////////////////////////////
+
 // listener
 server.listen(port, () => {
     console.log(`Server started and listening on port ${port}`);
