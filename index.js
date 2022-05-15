@@ -24,6 +24,38 @@ server.get('/', (req, res) => {
     res.send(`<h1>Server started on port ${port}</h1> <br> <h3>Version 1.1</h3>`);
 });
 
+/////////////////////////////////////////
+// JUST TO TEST RETRIEVING FROM DATABASE
+/////////////////////////////////////////
+server.get('/db', async (req, res) => {
+    try {
+      const client = await pool.connect();
+      const result = await client.query('SELECT * FROM test_table');
+      const results = { 'results': (result) ? result.rows : null};
+      res.send(results.results);
+    } catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  })
+
+// to post data to the database table
+server.post('/db', async (req, res, next) => {
+  try {
+    let id = req.body.id;
+    let name = req.body.name;
+    const newInsert = await pool.query("INSERT INTO test_table (id, name) VALUES ($1, $2) RETURNING *", [id, name]);
+    res.json(newInsert);
+  }
+  catch (err) {
+    console.error(err);
+    res.send("Error " + err);
+  }
+});
+/////////////////////////////////////////////////////
+// END OF ENDPOINTS TO TEST RETRIEVING FROM DATABASE
+/////////////////////////////////////////////////////
+
 // listener
 server.listen(port, () => {
     console.log(`Server started and listening on port ${port}`);
